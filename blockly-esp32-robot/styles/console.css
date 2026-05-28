@@ -1,0 +1,23 @@
+/* Python Code Panel */
+#codePanel { flex: 1; overflow: auto; padding: 16px; background: #0D1117; }
+#codePanel pre { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.py-keyword { color: #FF7B72; }
+.py-string { color: #A5D6FF; }
+.py-comment { color: #8B949E; font-style: italic; }
+.py-func { color: #D2A8FF; }
+.py-number { color: #79C0FF; }
+.py-indent { color: #E6EDF3; }
+
+/* Console Panel */
+#consolePanel { flex: 1; overflow: auto; padding: 12px; background: #0A0A0A; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.console-line { margin: 2px 0; }
+.console-line.info { color: #58A6FF; }
+.console-line.success { color: #3FB950; }
+.console-line.error { color: #F85149; }
+.console-line.warn { color: #D29922; }
+.console-line.sys { color: #8B949E; }
+
+/* Console input */
+.console-input-row { display: flex; align-items: center; background: #111; border-top: 1px solid #333; padding: 8px 12px; gap: 8px; flex-shrink: 0; }
+.console-input-row span { color: var(--green); font-family: monospace; font-size: 12px; }
+.console-input-row input { flex: 1; background: transparent; border: none; color: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none; }

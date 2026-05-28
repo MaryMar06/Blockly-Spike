@@ -1,0 +1,6 @@
+/* Toolbox override */
+.blocklyToolboxDiv { background: var(--dark) !important; border-right: 2px solid rgba(255,213,0,0.15) !important; }
+.blocklyTreeRow { padding: 6px 10px !important; margin: 2px 4px !important; border-radius: 8px !important; }
+.blocklyTreeRow:hover { background: rgba(255,255,255,0.05) !important; }
+.blocklyTreeSelected { background: rgba(255,213,0,0.15) !important; }
+.blocklyTreeLabel { font-family: 'Nunito', sans-serif !important; font-weight: 800 !important; font-size: 13px !important; }

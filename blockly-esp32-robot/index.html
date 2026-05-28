@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SPIKE Pi — Visual Programming</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- BLOCKLY BIBLIOTHEKEN -->
+<!-- Einbindung der lokalen Blockly-Dateien. 'compressed' Versionen sind für die Performance optimiert. -->
+<script src="./node_modules/blockly/blockly_compressed.js"></script>
+<script src="./node_modules/blockly/blocks_compressed.js"></script>
+<script src="./node_modules/blockly/msg/en.js"></script>
+
+<!-- TYPOGRAFIE -->
+<!-- Verwendung von Nunito für die UI-Elemente (modern, freundlich) und JetBrains Mono für den Code. -->
+<link rel="stylesheet" href="./node_modules/@fontsource/nunito/400.css">
+<link rel="stylesheet" href="./node_modules/@fontsource/jetbrains-mono/400.css">
+
+<!-- APP STYLESHEETS -->
+<link rel="stylesheet" href="./styles/main.css">
+<link rel="stylesheet" href="./styles/layout.css">
+<link rel="stylesheet" href="./styles/console.css">
+<link rel="stylesheet" href="./styles/blockly.css">
+</head>
+<body>
+
+<!-- HEADER: Globale Steuerelemente für den Verbindungsstatus und Projektmanagement -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div class="logo-text">SPIKE <span>Pi</span></div>
+  </div>
+  <div class="header-btns">
+    <button class="hbtn hbtn-connect" id="btnConnect" onclick="window.conectarSerial()">
+      <div class="conn-dot" id="connDot"></div> Connect Wemos
+    </button>
+    <button class="hbtn hbtn-run"  onclick="window.enviarAPi()">▶ Run</button>
+    <button class="hbtn hbtn-stop" onclick="window.detenerRobot()">■ Stop</button>
+    <button class="hbtn hbtn-save" onclick="window.saveProject()">💾 Save</button>
+    <button class="hbtn hbtn-load" onclick="document.getElementById('loadInput').click()">📂 Load</button>
+    <input type="file" id="loadInput" accept=".xml" style="display:none" onchange="window.loadProject(event)">
+  </div>
+</header>
+
+<!-- TELEMETRY BAR: Live-Daten-Anzeige vom ESP32-S3 (Bridge -> Robot) -->
+<div id="telemBar">
+  <span style="font-size:0.9em;font-weight:800;text-transform:uppercase;color:#555;letter-spacing:1px">Telemetry</span>
+  <span class="telem-item">Wemos: <span id="tWemos"  style="color:#555">—</span></span>
+  <span class="telem-item">Status: <span id="tStatus" style="color:#555">—</span></span>
+  <span class="telem-item">Mot A: <span id="tEncA" style="color:#555">—</span>°</span>
+  <span class="telem-item">Mot B: <span id="tEncB" style="color:#555">—</span>°</span>
+  
+  <!-- SENSOR-ANZEIGE: Zeigt den erkannten Farbwert inklusive eines farbigen Indikator-Box -->
+  <span class="telem-item">Color: 
+    <span id="tColorText" style="color:#555; font-weight:700;">—</span>
+    <div id="tColorBox" style="width: 16px; height: 16px; display: inline-block; vertical-align: sub; margin-left: 6px; border-radius: 4px; border: 1px solid #444; background: transparent;"></div>
+  </span>
+
+  <span class="telem-item">Last CMD: <span id="tCmd"  style="color:#888;font-family:monospace">—</span></span>
+</div>
+
+<!-- MAIN AREA: Zweispaltiges Layout (Blockly-Workspace links, Info-Panel rechts) -->
+<div id="main">
+  <div id="blocklyArea">
+    <div id="blocklyDiv"></div>
+  </div>
+
+  <div id="sidePanel">
+    <div class="side-tabs">
+      <div class="side-tab active" onclick="window.switchTab('code')">📡 Commands</div>
+      <div class="side-tab"        onclick="window.switchTab('console')">💻 Console</div>
+    </div>
+    <div class="side-content active" id="tab-code">
+      <!-- Hier wird der generierte Befehls-Code angezeigt (ID 'pythonCode' sollte ggf. in 'generatedCode' umbenannt werden) -->
+      <div id="codePanel"><pre id="pythonCode"></pre></div>
+    </div>
+    <div class="side-content" id="tab-console">
+      <div id="consolePanel"></div>
+      <div class="console-input-row">
+        <span>&gt;</span>
+        <input type="text" placeholder="Send command…" id="consoleInput"
+               onkeydown="if(event.key==='Enter') window.sendConsoleCmd()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM CONSOLE: Systemmeldungen und Error-Logging -->
+<div id="bottomBar">
+  <div class="bottom-bar-header">
+    <span>⬛ Output Console</span>
+    <button class="clear-btn" onclick="window.clearConsole()">Clear</button>
+  </div>
+  <div id="mainConsole"></div>
+</div>
+
+<!-- STATUS BAR: Metadaten wie Blockanzahl und Verbindungsstatus -->
+<div id="statusBar">
+  <div class="status-item active">Blocks: <span id="blockCount">0</span></div>
+  <div class="status-item" id="btStatus">Serial: <span id="btStatusText" style="color:#555">Disconnected</span></div>
+  <div class="status-item" id="modeStatus">Renderer: Zelos</div>
+</div>
+
+<!-- HAUPT-SKRIPT: Modulare Initialisierung der App -->
+<script type="module" src="./main.js"></script>
+</body>
+</html>

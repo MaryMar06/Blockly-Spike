@@ -1,0 +1,38 @@
+:root {
+  --yellow: #FFD500;
+  --yellow-dark: #E6BE00;
+  --dark: #1A1A2E;
+  --darker: #0F0F1A;
+  --panel: #16213E;
+  --panel2: #0F3460;
+  --green: #00C853;
+  --red: #FF1744;
+  --blue: #2979FF;
+  --cat-motors: #E64A19;
+  --cat-movement: #D81B60;
+  --cat-light: #FDD835;
+  --cat-sound: #8E24AA;
+  --cat-events: #F57F17;
+  --cat-control: #F9A825;
+  --cat-sensors: #00ACC1;
+  --cat-operators: #43A047;
+  --cat-variables: #E53935;
+  --cat-myblocks: #FF6D00;
+  --radius: 12px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--darker);
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
