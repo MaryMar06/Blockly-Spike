@@ -52,7 +52,7 @@ export const toolboxXml = `
     <block type="logic_compare"><field name="OP">EQ</field></block>
     <block type="logic_compare"><field name="OP">LT</field></block>
     <block type="logic_compare"><field name="OP">GT</field></block>
-    <block type="sp_touch_is_pressed"></block>   
+    <block type="sp_touch_sensor"></block>
 
   <!-- DYNAMISCHE KATEGORIEN: Diese werden von Blockly automatisch verwaltet -->
   <category name="VARIABLES" colour="#E53935" custom="VARIABLE"></category>
