@@ -147,6 +147,10 @@ add('sp_ctrl_if_else', b => {
   const elseBody = udpGen.statementToCode(b, 'ELSE') || '';
   return `IF:${cond}\n${doBody}ELSE\n${elseBody}END_IF\n`;
 });
+add('sp_touch_is_pressed', b => {
+  const pin = udpGen.valueToCode(b, 'PIN', udpGen.ORDER_NONE) || '0';
+  return [`TOUCH_IS_PRESSED(${pin})`, udpGen.ORDER_ATOMIC];
+});
 
 // ── EIGENE FUNKTIONEN (My Blocks / Procedures)
 add('procedures_defnoreturn', b => {
