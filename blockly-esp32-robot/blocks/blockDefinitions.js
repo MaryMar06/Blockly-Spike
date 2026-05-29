@@ -43,7 +43,7 @@ Blockly.defineBlocksWithJsonArray([
   // Blöcke mit 'output' geben einen Wert zurück und können daher in 'input_value' Felder eingesetzt werden.
   { "type": "sp_op_random", "message0": "🎲 random %1 to %2", "args0": [ {"type":"input_value","name":"FROM","check":"Number"}, {"type":"input_value","name":"TO","check":"Number"} ], "output":"Number", "colour":"#43A047" },
   {
-  "type": "sp_touch_is_pressed",
+  "type": "sp_touch_is_pressed",                             // Neuer Berührungssensor-Block 
   "message0": "👆 touch %1 pressed?",
   "args0": [
     {
