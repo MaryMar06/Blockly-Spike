@@ -44,7 +44,7 @@ Blockly.defineBlocksWithJsonArray([
   { "type": "sp_op_random", "message0": "🎲 random %1 to %2", "args0": [ {"type":"input_value","name":"FROM","check":"Number"}, {"type":"input_value","name":"TO","check":"Number"} ], "output":"Number", "colour":"#43A047" },
   {
   "type": "sp_touch_is_pressed",
-  "message0": "👆 touch pin %1 pressed?",
+  "message0": "👆 touch %1 pressed?",
   "args0": [
     {
       "type": "input_value",
