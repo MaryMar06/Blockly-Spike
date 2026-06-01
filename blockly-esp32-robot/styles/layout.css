@@ -36,7 +36,7 @@ header {
   background: #0F3460; height: 52px; display: flex; align-items: center;
   padding: 0 16px; gap: 24px; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.telem-item { font-size: 0.8em; font-weight: 700; color: #c52424; }
+.telem-item { font-size: 0.8em; font-weight: 700; color: #cccccc; }
 .telem-item span { font-weight: 800; }
 
 /* ===== MAIN LAYOUT ===== */
