@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <title>SPIKE Pi — Visual Programming</title>
@@ -9,7 +9,7 @@
 <!-- Einbindung der lokalen Blockly-Dateien. 'compressed' Versionen sind für die Performance optimiert. -->
 <script src="./node_modules/blockly/blockly_compressed.js"></script>
 <script src="./node_modules/blockly/blocks_compressed.js"></script>
-<script src="./node_modules/blockly/msg/en.js"></script>
+<script src="./node_modules/blockly/msg/de.js"></script>
 
 <!-- TYPOGRAFIE -->
 <!-- Verwendung von Nunito für die UI-Elemente (modern, freundlich) und JetBrains Mono für den Code. -->
@@ -32,12 +32,12 @@
   </div>
   <div class="header-btns">
     <button class="hbtn hbtn-connect" id="btnConnect" onclick="window.conectarSerial()">
-      <div class="conn-dot" id="connDot"></div> Connect Wemos
+      <div class="conn-dot" id="connDot"></div> Wemos verbinden
     </button>
-    <button class="hbtn hbtn-run"  onclick="window.enviarAPi()">▶ Run</button>
-    <button class="hbtn hbtn-stop" onclick="window.detenerRobot()">■ Stop</button>
-    <button class="hbtn hbtn-save" onclick="window.saveProject()">💾 Save</button>
-    <button class="hbtn hbtn-load" onclick="document.getElementById('loadInput').click()">📂 Load</button>
+    <button class="hbtn hbtn-run"  onclick="window.enviarAPi()">▶ Starten</button>
+    <button class="hbtn hbtn-stop" onclick="window.detenerRobot()">■ Stopp</button>
+    <button class="hbtn hbtn-save" onclick="window.saveProject()">💾 Speichrn</button>
+    <button class="hbtn hbtn-load" onclick="document.getElementById('loadInput').click()">📂 Laden</button>
     <input type="file" id="loadInput" accept=".xml" style="display:none" onchange="window.loadProject(event)">
   </div>
 </header>
@@ -88,7 +88,7 @@
 <!-- BOTTOM CONSOLE: Systemmeldungen und Error-Logging -->
 <div id="bottomBar">
   <div class="bottom-bar-header">
-    <span>⬛ Output Console</span>
+    <span>⬛ Ausgabe-Konsole</span>
     <button class="clear-btn" onclick="window.clearConsole()">Clear</button>
   </div>
   <div id="mainConsole"></div>
@@ -96,9 +96,9 @@
 
 <!-- STATUS BAR: Metadaten wie Blockanzahl und Verbindungsstatus -->
 <div id="statusBar">
-  <div class="status-item active">Blocks: <span id="blockCount">0</span></div>
-  <div class="status-item" id="btStatus">Serial: <span id="btStatusText" style="color:#555">Disconnected</span></div>
-  <div class="status-item" id="modeStatus">Renderer: Zelos</div>
+  <div class="status-item active">Blöcke: <span id="blockCount">0</span></div>
+  <div class="status-item" id="btStatus">Seriell: <span id="btStatusText" style="color:#555">Nicht verbunden</span></div>
+  <div class="status-item" id="modeStatus">Darstellung: Zelos</div>
 </div>
 
 <!-- HAUPT-SKRIPT: Modulare Initialisierung der App -->
