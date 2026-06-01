@@ -43,6 +43,11 @@ export const toolboxXml = `
     <block type="sp_ctrl_if_else"></block>
     <block type="sp_ctrl_stop_all"></block>
   </category>
+  
+  <!-- SENSORS -->
+<category name="SENSORS" colour="#00BCD4">
+  <block type="sp_color_get"></block>
+</category>
 
   <!-- OPERATOREN: Mathematische und logische Berechnungen -->
   <category name="OPERATORS" colour="#43A047">
