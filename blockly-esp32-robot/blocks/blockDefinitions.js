@@ -41,7 +41,7 @@ Blockly.defineBlocksWithJsonArray([
 
   // --- SENSORS --- 
   // Diese Blöcke lesen Daten von physischen Sensoren aus und geben Messwerte zurück, die in Bedingungen, Berechnungen und Steuerlogik verwendet werden können
-  {"type": "sp_color_get","message0": "🌈 AS7341 %1","args0": [{"type": "field_dropdown","name": "CHANNEL","options": [["red", "RED"],["green", "GREEN"],["blue", "BLUE"],["clear", "CLEAR"]]}],"output": "Number", "colour": "#00BCD4"},
+  {"type": "sp_color_get","message0": "🌈 AS7341 %1","args0": [{"type": "field_dropdown","name": "CHANNEL","options": [["red", "RED"],["green", "GREEN"],["blue", "BLUE"], ["yellow", "YELLOW"],["clear", "CLEAR"]]}],"output": "Number", "colour": "#00BCD4"},
   
   // --- OPERATOREN ---
   // Blöcke mit 'output' geben einen Wert zurück und können daher in 'input_value' Felder eingesetzt werden.
