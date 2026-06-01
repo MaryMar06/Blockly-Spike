@@ -44,13 +44,25 @@
 
 <!-- TELEMETRY BAR: Live-Daten-Anzeige vom ESP32-S3 (Bridge -> Robot) -->
 <div id="telemBar" style="color:#cccccc">
-  <span style="font-size:0.9em;font-weight:800;text-transform:uppercase;letter-spacing:1px">
+
+  <span style="font-size:0.9em;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#cccccc">
     Telemetrie
   </span>
+
   <span class="telem-item">Wemos: <span id="tWemos">—</span></span>
   <span class="telem-item">Status: <span id="tStatus">—</span></span>
   <span class="telem-item">Mot A: <span id="tEncA">—</span>°</span>
   <span class="telem-item">Mot B: <span id="tEncB">—</span>°</span>
+
+  <span class="telem-item">
+    Farbe:
+    <span id="tColorText" style="color:#cccccc;font-weight:700;">—</span>
+  </span>
+
+  <span class="telem-item">
+    Letzter Befehl:
+    <span id="tCmd" style="color:#cccccc;font-family:monospace">—</span>
+  </span>
   
   <!-- SENSOR-ANZEIGE: Zeigt den erkannten Farbwert inklusive eines farbigen Indikator-Box -->
   <span class="telem-item">Farbe: 
