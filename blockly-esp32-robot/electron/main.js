@@ -1,35 +1,35 @@
 /**
- * electron/main.js — Proceso principal de Electron
- * Abre la ventana, expone serialport al renderer via IPC
+ * electron/main.js — Electron-Hauptprozess
+ * Öffnet das Fenster, stellt serialport über IPC dem Renderer zur Verfügung
  */
 
 const { app, BrowserWindow, ipcMain } = require('electron');
-const path       = require('path');
+const path = require('path');
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 
-// ── VENTANA ──────────────────────────────────────────────────
+// Fenster
 function createWindow() {
   const win = new BrowserWindow({
-    width:  1400,
+    width: 1400,
     height: 900,
-    minWidth:  900,
+    minWidth: 900,
     minHeight: 600,
     title: 'SPIKE Pi',
     icon: path.join(__dirname, '..', 'assets', 'icon.png'),
     webPreferences: {
-      preload:         path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration:  false,
+      nodeIntegration: false,
     }
   });
 
   win.loadFile(path.join(__dirname, '..', 'index.html'));
 
-  // En desarrollo puedes descomentar esto:
+  // Im Entwicklungsmodus kann dies aktiviert werden
   // win.webContents.openDevTools();
 
-  // Quitar menú nativo (opcional — la app tiene su propio header)
+  // Native Menüleiste entfernen (optional — die App hat einen eigenen Header)
   win.setMenuBarVisibility(false);
 }
 
@@ -44,45 +44,52 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// ── SERIAL IPC ───────────────────────────────────────────────
-// El renderer llama a window.serialAPI.xxx()
-// El main process maneja el puerto real con Node serialport
+// Serielle IPC-Kommunikation
+// Der Renderer ruft window.serialAPI.xxx() auf
+// Der Hauptprozess verwaltet den echten Port über Node serialport
 
-let port   = null;
+let port = null;
 let parser = null;
-let win    = null;
+let win = null;
 
-// Guardar referencia a la ventana para mandar datos de vuelta
+// Fensterreferenz speichern, um Daten zurückzusenden
 app.on('browser-window-created', (_, w) => { win = w; });
 
-// Listar puertos disponibles
+// Verfügbare Ports auflisten
 ipcMain.handle('serial:list', async () => {
   const ports = await SerialPort.list();
   return ports.map(p => ({ path: p.path, manufacturer: p.manufacturer || '' }));
 });
 
-// Abrir puerto
+// Port öffnen
 ipcMain.handle('serial:open', async (_, portPath) => {
   if (port && port.isOpen) {
-    try { await new Promise(r => port.close(r)); } catch(_) {}
+    try { await new Promise(r => port.close(r)); } catch (_) {}
   }
+
   return new Promise((resolve, reject) => {
     port = new SerialPort({ path: portPath, baudRate: 115200 }, err => {
       if (err) return reject(err.message);
 
       parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
+
       parser.on('data', line => {
-        // Mandar cada línea al renderer
+        // Jede Zeile an den Renderer senden
         if (win && !win.isDestroyed()) {
           win.webContents.send('serial:data', line.trim());
         }
       });
 
       port.on('error', e => {
-        if (win && !win.isDestroyed()) win.webContents.send('serial:error', e.message);
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('serial:error', e.message);
+        }
       });
+
       port.on('close', () => {
-        if (win && !win.isDestroyed()) win.webContents.send('serial:closed');
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('serial:closed');
+        }
       });
 
       resolve('ok');
@@ -90,15 +97,15 @@ ipcMain.handle('serial:open', async (_, portPath) => {
   });
 });
 
-// Escribir línea
+// Zeile schreiben
 ipcMain.handle('serial:write', async (_, line) => {
-  if (!port || !port.isOpen) throw new Error('Puerto no abierto');
+  if (!port || !port.isOpen) throw new Error('Port nicht geöffnet');
   return new Promise((resolve, reject) => {
     port.write(line + '\n', err => err ? reject(err.message) : resolve('ok'));
   });
 });
 
-// Cerrar puerto
+// Port schließen
 ipcMain.handle('serial:close', async () => {
   if (port && port.isOpen) {
     return new Promise(r => port.close(r));
