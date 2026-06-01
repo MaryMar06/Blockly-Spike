@@ -40,7 +40,7 @@ Blockly.defineBlocksWithJsonArray([
   { "type": "sp_ctrl_stop_all", "message0": "🛑 stop all", "previousStatement":null, "colour":"#F9A825" },
 
   // --- SENSORS --- 
-  // Diese Blöcke lesen Daten von physischen Sensoren aus und geben Messwerte zurück, // die in Bedingungen, Berechnungen und Steuerlogik verwendet werden können
+  // Diese Blöcke lesen Daten von physischen Sensoren aus und geben Messwerte zurück, die in Bedingungen, Berechnungen und Steuerlogik verwendet werden können
   {"type": "sp_color_get","message0": "🌈 AS7341 %1","args0": [{"type": "field_dropdown","name": "CHANNEL","options": [["red", "RED"],["green", "GREEN"],["blue", "BLUE"],["clear", "CLEAR"]]}],"output": "Number", "colour": "#00BCD4"},
   
   // --- OPERATOREN ---
