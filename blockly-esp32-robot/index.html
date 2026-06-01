@@ -44,19 +44,19 @@
 
 <!-- TELEMETRY BAR: Live-Daten-Anzeige vom ESP32-S3 (Bridge -> Robot) -->
 <div id="telemBar">
-  <span style="font-size:0.9em;font-weight:800;text-transform:uppercase;color:#555;letter-spacing:1px">Telemetry</span>
+  <span style="font-size:0.9em;font-weight:800;text-transform:uppercase;color:#555;letter-spacing:1px">Telemetrie</span>
   <span class="telem-item">Wemos: <span id="tWemos"  style="color:#555">—</span></span>
   <span class="telem-item">Status: <span id="tStatus" style="color:#555">—</span></span>
   <span class="telem-item">Mot A: <span id="tEncA" style="color:#555">—</span>°</span>
   <span class="telem-item">Mot B: <span id="tEncB" style="color:#555">—</span>°</span>
   
   <!-- SENSOR-ANZEIGE: Zeigt den erkannten Farbwert inklusive eines farbigen Indikator-Box -->
-  <span class="telem-item">Color: 
+  <span class="telem-item">Farbe: 
     <span id="tColorText" style="color:#555; font-weight:700;">—</span>
     <div id="tColorBox" style="width: 16px; height: 16px; display: inline-block; vertical-align: sub; margin-left: 6px; border-radius: 4px; border: 1px solid #444; background: transparent;"></div>
   </span>
 
-  <span class="telem-item">Last CMD: <span id="tCmd"  style="color:#888;font-family:monospace">—</span></span>
+  <span class="telem-item">Letzter Befehl: <span id="tCmd"  style="color:#888;font-family:monospace">—</span></span>
 </div>
 
 <!-- MAIN AREA: Zweispaltiges Layout (Blockly-Workspace links, Info-Panel rechts) -->
@@ -67,8 +67,8 @@
 
   <div id="sidePanel">
     <div class="side-tabs">
-      <div class="side-tab active" onclick="window.switchTab('code')">📡 Commands</div>
-      <div class="side-tab"        onclick="window.switchTab('console')">💻 Console</div>
+      <div class="side-tab active" onclick="window.switchTab('code')">📡 Befehle</div>
+      <div class="side-tab"        onclick="window.switchTab('console')">💻 Konsole</div>
     </div>
     <div class="side-content active" id="tab-code">
       <!-- Hier wird der generierte Befehls-Code angezeigt (ID 'pythonCode' sollte ggf. in 'generatedCode' umbenannt werden) -->
