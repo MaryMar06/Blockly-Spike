@@ -39,6 +39,10 @@ Blockly.defineBlocksWithJsonArray([
   { "type": "sp_ctrl_if_else", "message0": "❓ if %1 then", "args0": [{"type":"input_value","name":"COND","check":"Boolean"}], "message1": "%1", "args1": [{"type":"input_statement","name":"DO"}], "message2": "else", "message3": "%1", "args3": [{"type":"input_statement","name":"ELSE"}], "previousStatement":null,"nextStatement":null, "colour":"#F9A825" },
   { "type": "sp_ctrl_stop_all", "message0": "🛑 stop all", "previousStatement":null, "colour":"#F9A825" },
 
+  // --- SENSORS --- 
+  // Diese Blöcke lesen Daten von physischen Sensoren aus und geben Messwerte zurück, // die in Bedingungen, Berechnungen und Steuerlogik verwendet werden können
+  {"type": "sp_color_get","message0": "🌈 AS7341 %1","args0": [{"type": "field_dropdown","name": "CHANNEL","options": [["red", "RED"],["green", "GREEN"],["blue", "BLUE"],["clear", "CLEAR"]]}],"output": "Number", "colour": "#00BCD4"},
+  
   // --- OPERATOREN ---
   // Blöcke mit 'output' geben einen Wert zurück und können daher in 'input_value' Felder eingesetzt werden.
   { "type": "sp_op_random", "message0": "🎲 random %1 to %2", "args0": [ {"type":"input_value","name":"FROM","check":"Number"}, {"type":"input_value","name":"TO","check":"Number"} ], "output":"Number", "colour":"#43A047" },
