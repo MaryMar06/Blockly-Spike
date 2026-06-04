@@ -44,10 +44,11 @@ export const toolboxXml = `
     <block type="sp_ctrl_stop_all"></block>
   </category>
 
-  <!-- SENSOREN -->
 <category name="SENSOREN" colour="#00BCD4">
   <block type="sp_color_get"></block>
+  <block type="sp_color_detect"></block>
   <block type="sp_distance_get"></block>
+  <block type="sp_touch_sensor">
     <value name="PIN">
       <shadow type="math_number">
         <field name="NUM">4</field>
@@ -55,6 +56,7 @@ export const toolboxXml = `
     </value>
   </block>
 </category>
+
 
   <!-- OPERATOREN: Mathematische und logische Berechnungen -->
   <category name="OPERATOREN" colour="#43A047">
