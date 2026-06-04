@@ -66,7 +66,6 @@ export const toolboxXml = `
     <block type="logic_compare"><field name="OP">EQ</field></block>
     <block type="logic_compare"><field name="OP">LT</field></block>
     <block type="logic_compare"><field name="OP">GT</field></block>
-    <block type="sp_touch_sensor"></block>
   </category>
 
   <!-- DYNAMISCHE KATEGORIEN: Werden von Blockly automatisch verwaltet -->
