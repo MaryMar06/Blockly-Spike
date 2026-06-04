@@ -60,14 +60,17 @@ export const toolboxXml = `
 
   <!-- OPERATOREN: Mathematische und logische Berechnungen -->
   <category name="OPERATOREN" colour="#43A047">
-    <block type="sp_op_random"><value name="VON"><shadow type="math_number"><field name="NUM">1</field></shadow></value><value name="BIS"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
-    <block type="math_arithmetic"><field name="OP">ADD</field><value name="A"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="B"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block>
-    <block type="math_arithmetic"><field name="OP">MINUS</field><value name="A"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="B"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block>
-    <block type="logic_compare"><field name="OP">EQ</field></block>
-    <block type="logic_compare"><field name="OP">LT</field></block>
-    <block type="logic_compare"><field name="OP">GT</field></block>
-    <block type="math_number"><field name="NUM">100</field></block>
-  </category>
+  <block type="math_number">
+    <field name="NUM">100</field>
+  </block>
+  <block type="sp_op_random">...</block>
+  <block type="math_arithmetic"><field name="OP">ADD</field></block>
+  <block type="math_arithmetic"><field name="OP">MINUS</field></block>
+  <block type="logic_compare"><field name="OP">EQ</field></block>
+  <block type="logic_compare"><field name="OP">LT</field></block>
+  <block type="logic_compare"><field name="OP">GT</field></block>
+
+</category>
 
   <!-- DYNAMISCHE KATEGORIEN: Werden von Blockly automatisch verwaltet -->
   <category name="VARIABLEN" colour="#E53935" custom="VARIABLE"></category>
