@@ -46,7 +46,6 @@ export const toolboxXml = `
 
 <category name="SENSOREN" colour="#00BCD4">
   <block type="sp_color_get"></block>
-  <block type="sp_color_detect"></block>
   <block type="sp_distance_get"></block>
   <block type="sp_touch_sensor">
     <value name="PIN">
