@@ -72,6 +72,16 @@ add('sp_motor_run_rotations', b => {
   return `MOTOR_${id}:${r}:${dir}:${sp}\n`;
 });
 
+add('sp_color_get', b => {
+  const channel = b.getFieldValue('CHANNEL');
+  return [`COLOR_${channel}()`, udpGen.ORDER_ATOMIC];
+});
+
+add('sp_color_detect', b => {
+  const color = b.getFieldValue('COLOR');
+  return [`COLOR_IS_${color}()`, udpGen.ORDER_ATOMIC];
+});
+
 add('sp_motor_run_seconds', b => {
   const id  = b.getFieldValue('MOTOR');
   const dir = b.getFieldValue('DIR') === 'forward' ? 1 : 0;
