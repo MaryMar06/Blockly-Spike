@@ -77,6 +77,10 @@ add('sp_color_get', b => {
   return [`COLOR_${channel}()`, udpGen.ORDER_ATOMIC];
 });
 
+add('sp_distance_get', b => {
+  return ['DISTANCE()', udpGen.ORDER_ATOMIC];
+});
+
 add('sp_color_detect', b => {
   const color = b.getFieldValue('COLOR');
   return [`COLOR_IS_${color}()`, udpGen.ORDER_ATOMIC];
