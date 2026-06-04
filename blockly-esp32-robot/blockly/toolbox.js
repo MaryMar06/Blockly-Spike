@@ -48,22 +48,6 @@ export const toolboxXml = `
   <block type="sp_color_get"></block>
   <block type="sp_distance_get"></block>
 
-  <block type="sp_distance_less_than">
-    <value name="DISTANCE">
-      <shadow type="math_number">
-        <field name="NUM">100</field>
-      </shadow>
-    </value>
-  </block>
-
-  <block type="sp_distance_greater_than">
-    <value name="DISTANCE">
-      <shadow type="math_number">
-        <field name="NUM">100</field>
-      </shadow>
-    </value>
-  </block>
-
   <block type="sp_touch_sensor">
     <value name="PIN">
       <shadow type="math_number">
