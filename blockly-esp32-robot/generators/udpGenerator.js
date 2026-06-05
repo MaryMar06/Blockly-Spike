@@ -86,10 +86,6 @@ add('sp_color_detect', b => {
   return [`COLOR_IS_${color}()`, udpGen.ORDER_ATOMIC];
 });
 
-add('sp_distance_get', b => {
-  return ['DISTANCE()', udpGen.ORDER_ATOMIC];
-});
-
 add('sp_motor_run_seconds', b => {
   const id  = b.getFieldValue('MOTOR');
   const dir = b.getFieldValue('DIR') === 'forward' ? 1 : 0;
