@@ -44,9 +44,7 @@ Blockly.defineBlocksWithJsonArray([
 {"type": "sp_color_get","message0": "🌈 Farbe %1","args0": [{"type": "field_dropdown","name": "CHANNEL","options": [["rot", "RED"],["grün", "GREEN"],["blau", "BLUE"],["gelb", "YELLOW"],["weiß", "WHITE"],["schwarz", "BLACK"],["klar", "CLEAR"]]}],"output": "Number", "colour": "#00BCD4"},
 {"type": "sp_color_detect","message0": "🌈 Farbe ist %1","args0": [{"type": "field_dropdown","name": "COLOR","options": [["rot", "RED"],["grün", "GREEN"],["blau", "BLUE"],["gelb", "YELLOW"],["weiß", "WHITE"],["schwarz", "BLACK"]]}],"output": "Boolean", "colour": "#00BCD4"},
 {"type": "sp_distance_get","message0": "📏 Abstand in mm","output": "Number","colour": "#00BCD4"},
-{"type": "sp_distance_less_than","message0": "📏 Abstand < %1 mm","args0": [{"type":"input_value","name":"DISTANCE","check":"Number"}],"output": "Boolean","colour": "#00BCD4"},
-{"type": "sp_distance_greater_than","message0": "📏 Abstand > %1 mm","args0": [{"type":"input_value","name":"DISTANCE","check":"Number"}],"output": "Boolean","colour": "#00BCD4"},
-  
+
   // --- OPERATOREN ---
   // Blöcke mit 'output' geben einen Wert zurück und können daher in 'input_value' Felder eingesetzt werden.
   { "type": "sp_op_random", "message0": "🎲 random %1 to %2", "args0": [ {"type":"input_value","name":"FROM","check":"Number"}, {"type":"input_value","name":"TO","check":"Number"} ], "output":"Number", "colour":"#43A047" },
