@@ -71,21 +71,6 @@ add('sp_motor_run_rotations', b => {
   const sp  = udpGen.valueToCode(b, 'SPEED', udpGen.ORDER_NONE) || '5';
   return `MOTOR_${id}:${r}:${dir}:${sp}\n`;
 });
-
-add('sp_color_get', b => {
-  const channel = b.getFieldValue('CHANNEL');
-  return [`COLOR_${channel}()`, udpGen.ORDER_ATOMIC];
-});
-
-add('sp_distance_get', b => {
-  return ['DISTANCE()', udpGen.ORDER_ATOMIC];
-});
-
-add('sp_color_detect', b => {
-  const color = b.getFieldValue('COLOR');
-  return [`COLOR_IS_${color}()`, udpGen.ORDER_ATOMIC];
-});
-
 add('sp_motor_run_seconds', b => {
   const id  = b.getFieldValue('MOTOR');
   const dir = b.getFieldValue('DIR') === 'forward' ? 1 : 0;
@@ -99,6 +84,22 @@ add('sp_motor_run_seconds', b => {
 
 add('sp_motor_stop',      _ => 'STOP\n');
 add('sp_motor_set_speed', _ => ''); // Aktuell leer: Sollte hier implementiert werden, falls das Protokoll es unterstützt
+
+
+// ── SENSOREN ────────────────────────────────────────────────
+add('sp_color_get', b => {
+  const channel = b.getFieldValue('CHANNEL');
+  return [`COLOR_${channel}()`, udpGen.ORDER_ATOMIC];
+});
+
+add('sp_color_detect', b => {
+  const color = b.getFieldValue('COLOR');
+  return [`COLOR_IS_${color}()`, udpGen.ORDER_ATOMIC];
+});
+
+add('sp_distance_get', b => {
+  return ['DISTANCE()', udpGen.ORDER_ATOMIC];
+});
 
 // ── BEWEGUNGS-KOMBINATIONEN (High-Level)
 add('sp_move_forward', b => {
