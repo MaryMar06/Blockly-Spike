@@ -83,8 +83,11 @@ add('sp_motor_run_seconds', b => {
 });
 
 add('sp_motor_stop',      _ => 'STOP\n');
-add('sp_motor_set_speed', _ => ''); // Aktuell leer: Sollte hier implementiert werden, falls das Protokoll es unterstützt
-
+add('sp_motor_set_speed', b => {
+  const id = b.getFieldValue('MOTOR');
+  const sp = udpGen.valueToCode(b, 'SPEED', udpGen.ORDER_NONE) || '5';
+  return `SET_SPEED_${id}:${sp}\n`;
+});
 
 // ── SENSOREN ────────────────────────────────────────────────
 add('sp_color_get', b => {
