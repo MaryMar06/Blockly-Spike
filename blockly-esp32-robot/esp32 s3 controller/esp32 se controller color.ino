@@ -48,34 +48,50 @@ const float cieY[8] = {0.0022, 0.0298, 0.1390, 0.6082, 1.0000, 0.7570, 0.2650, 0
 const float cieZ[8] = {0.3713, 1.7826, 0.8130, 0.1117, 0.0057, 0.0011, 0.0000, 0.0000};
 
 volatile int sR = 0, sG = 0, sB = 0;
-char sColorName[32] = "Desconocido";
+char sColorName[32] = "Unbekannt";
 volatile bool sColorNew = false;
 
 String obtenerNombreColor(int r, int g, int b, float intensidadTotal) {
-  if (intensidadTotal < 15.0) return "Oscuro / Negro";
-  float rf = r / 255.0; float gf = g / 255.0; float bf = b / 255.0;
-  float cmax = max(rf, max(gf, bf)); float cmin = min(rf, min(gf, bf));
+  if (intensidadTotal < 15.0) return "Schwarz";
+  
+  float rf = r / 255.0;
+  float gf = g / 255.0;
+  float bf = b / 255.0;
+
+  float cmax = max(rf, max(gf, bf));
+  float cmin = min(rf, min(gf, bf));
   float delta = cmax - cmin;
+
   float s = (cmax == 0) ? 0 : (delta / cmax);
-  if (s < 0.15) return "Blanco / Gris";
+
+  if (s < 0.15) return "Weiß";
 
   float h = 0;
+
   if (delta > 0) {
-    if (cmax == rf) { h = 60.0 * ((gf - bf) / delta); if (h < 0) h += 360.0; }
-    else if (cmax == gf) h = 60.0 * (((bf - rf) / delta) + 2.0);
-    else if (cmax == bf) h = 60.0 * (((rf - gf) / delta) + 4.0);
+    if (cmax == rf) {
+      h = 60.0 * ((gf - bf) / delta);
+      if (h < 0) h += 360.0;
+    }
+    else if (cmax == gf) {
+      h = 60.0 * (((bf - rf) / delta) + 2.0);
+    }
+    else if (cmax == bf) {
+      h = 60.0 * (((rf - gf) / delta) + 4.0);
+    }
   }
 
-  if (h >= 0   && h < 12)  return "Rojo";
-  if (h >= 12  && h < 30)  return "Naranja"; 
-  if (h >= 30  && h < 75)  return "Amarillo";
-  if (h >= 75  && h < 160) return "Verde";
-  if (h >= 160 && h < 200) return "Cian";
-  if (h >= 200 && h < 260) return "Azul";
-  if (h >= 260 && h < 320) return "Morado / Violeta";
+  if (h >= 0   && h < 12)  return "Rot";
+  if (h >= 12  && h < 30)  return "Orange";
+  if (h >= 30  && h < 75)  return "Gelb";
+  if (h >= 75  && h < 160) return "Grün";
+  if (h >= 160 && h < 200) return "Cyan";
+  if (h >= 200 && h < 260) return "Blau";
+  if (h >= 260 && h < 320) return "Violett";
   if (h >= 320 && h < 350) return "Rosa";
-  if (h >= 350 && h <= 360) return "Rojo";
-  return "Desconocido";
+  if (h >= 350 && h <= 360) return "Rot";
+
+  return "Unbekannt";
 }
 
 void colorTaskFn(void* arg) {
