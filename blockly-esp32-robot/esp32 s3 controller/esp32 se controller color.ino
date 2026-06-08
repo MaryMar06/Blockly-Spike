@@ -689,7 +689,7 @@ void addLine(const char* line) {
 void setup() {
   Serial.begin(115200); delay(200);
 
-  Wire.begin(10, 11);
+  Wire.begin(16, 17);
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
