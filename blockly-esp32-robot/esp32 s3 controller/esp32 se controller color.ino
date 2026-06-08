@@ -1,5 +1,5 @@
 /*
- * ESP32S3 — Robot Controller (Motores + Telemetría Continua en Grados + Color)
+ * ESP32S3 - Robot controller (motors, continuous degree telemetry, and color)
  */
 
 #include <WiFi.h>
@@ -7,7 +7,7 @@
 #include <Wire.h>
 #include "Adafruit_AS7341.h"
 
-// ── CONFIG AP ────────────────────────────────────────────────
+// AP CONFIGURATION
 const char*    AP_SSID         = "RobotAP";
 const char*    AP_PASS         = "robot1234";
 const uint16_t UDP_LISTEN_PORT = 4210;
@@ -17,7 +17,7 @@ IPAddress wemosIP(0,0,0,0);
 bool      wemosKnown = false;
 WiFiUDP   udp;
 
-// ── PINES MOTORES Y ENCODERS ─────────────────────────────────
+// MOTOR AND ENCODER PINS
 #define AIN1 5
 #define AIN2 6
 #define PWMA 4
@@ -33,13 +33,28 @@ WiFiUDP   udp;
 #define PWM_FREQ 5000
 #define PWM_RES  8
 
+/*
+ * Writes the PWM duty cycle for motor A.
+ *
+ * The caller can pass any integer, and constrain() keeps the value inside the
+ * 8-bit PWM range used by this sketch. This protects the LEDC channel from
+ * invalid values while keeping the motor-control functions simple.
+ */
 void setPWM_A(int v) { ledcWrite(PWMA, constrain(v,0,255)); }
+
+/*
+ * Writes the PWM duty cycle for motor B.
+ *
+ * This mirrors setPWM_A() for the second motor. Keeping the wrapper separate
+ * makes later pin/channel changes easier because movement code does not need
+ * to call ledcWrite() directly.
+ */
 void setPWM_B(int v) { ledcWrite(PWMB, constrain(v,0,255)); }
 
 const float PASOS_X_VUELTA = 2956.0f;
 const float PASOS_X_GRADO  = (PASOS_X_VUELTA * 1.19f) / 180.0f;
 
-// ── SENSOR DE COLOR AS7341 ───────────────────────────────────
+// AS7341 COLOR SENSOR
 Adafruit_AS7341 as7341;
 bool sensorColorOk = false;
 
@@ -51,6 +66,15 @@ volatile int sR = 0, sG = 0, sB = 0;
 char sColorName[32] = "Unbekannt";
 volatile bool sColorNew = false;
 
+/*
+ * Converts an RGB reading and total light intensity into a color name.
+ *
+ * The AS7341 task converts spectral readings into normalized RGB values first.
+ * This function classifies those values by brightness, saturation, and hue:
+ * very low intensity is treated as black, low saturation is treated as white,
+ * and saturated colors are mapped into hue ranges. The returned names are the
+ * existing UI/protocol strings and are intentionally left unchanged.
+ */
 String obtenerNombreColor(int r, int g, int b, float intensidadTotal) {
   if (intensidadTotal < 15.0) return "Schwarz";
   
@@ -94,6 +118,19 @@ String obtenerNombreColor(int r, int g, int b, float intensidadTotal) {
   return "Unbekannt";
 }
 
+/*
+ * FreeRTOS task that continuously reads the AS7341 color sensor.
+ *
+ * When the sensor is available, the task reads all channels, selects the eight
+ * spectral channels used for color estimation, converts them through an
+ * approximate CIE XYZ matrix, then converts XYZ to RGB. The result is normalized
+ * and gamma-corrected before being published through the shared sR/sG/sB and
+ * sColorName variables. sColorNew tells loop() that fresh telemetry should be
+ * sent to the WEMOS bridge.
+ *
+ * The task sleeps for 500 ms between readings so color telemetry does not block
+ * robot movement or command reception.
+ */
 void colorTaskFn(void* arg) {
   uint16_t ch[12];
   for (;;) {
@@ -127,12 +164,29 @@ void colorTaskFn(void* arg) {
   }
 }
 
-// ── ENCODERS ─────────────────────────────────────────────────
+// ENCODERS
 volatile long encA = 0, encB = 0;
+
+/*
+ * Interrupt handler for motor A's quadrature encoder.
+ *
+ * The handler compares the two encoder channels to decide whether the wheel
+ * moved forward or backward, then increments or decrements encA. It is kept
+ * very small because interrupt handlers must return quickly and avoid blocking
+ * work.
+ */
 void IRAM_ATTR isrA() { encA += (digitalRead(ENC_A_A)==digitalRead(ENC_A_B))?1:-1; }
+
+/*
+ * Interrupt handler for motor B's quadrature encoder.
+ *
+ * This is the same direction-tracking logic as isrA(), but it updates encB for
+ * the second wheel. Movement and telemetry functions read encA/encB to measure
+ * distance, turns, and live encoder angles.
+ */
 void IRAM_ATTR isrB() { encB += (digitalRead(ENC_B_A)==digitalRead(ENC_B_B))?1:-1; }
 
-// ── PROGRAMA ─────────────────────────────────────────────────
+// PROGRAM
 #define MAX_LINES   512
 #define MAX_LINE_LEN 64
 char     prog[MAX_LINES][MAX_LINE_LEN];
@@ -144,15 +198,41 @@ struct Var { char name[16]; float val; };
 Var  vars[MAX_VARS];
 int  varCount = 0;
 
+/*
+ * Looks up the current value of a program variable.
+ *
+ * Variables are stored in a small fixed-size table because Blockly programs
+ * sent to the robot are compact. If a variable has not been assigned yet, the
+ * interpreter treats it as zero so expressions can still be evaluated safely.
+ */
 float getVar(const char* name) {
   for (int i=0;i<varCount;i++) if (strcmp(vars[i].name,name)==0) return vars[i].val;
   return 0;
 }
+
+/*
+ * Creates or updates a program variable.
+ *
+ * Existing variables are overwritten in place. New variables are appended until
+ * MAX_VARS is reached; extra variables are ignored to avoid writing outside the
+ * fixed array.
+ */
 void setVar(const char* name, float val) {
   for (int i=0;i<varCount;i++) { if (strcmp(vars[i].name,name)==0){vars[i].val=val;return;} }
   if (varCount<MAX_VARS) { strncpy(vars[varCount].name,name,15); vars[varCount].val=val; varCount++; }
 }
 
+/*
+ * Evaluates the compact expression syntax used by uploaded programs.
+ *
+ * Supported inputs are numeric literals, variable names, random(a,b), and
+ * parenthesized binary expressions using +, -, *, /, =, <, or >. Comparisons
+ * return 1 for true and 0 for false so they can drive IF and loop logic.
+ *
+ * This is intentionally a small interpreter rather than a full parser. Blockly
+ * generates predictable expressions, so the function trims the input, handles
+ * the known expression forms, and falls back to variable lookup.
+ */
 float evalExpr(const char* expr) {
   char e[48]; strncpy(e,expr,47); e[47]='\0';
   int s=0; while(e[s]==' ')s++;
@@ -162,6 +242,7 @@ float evalExpr(const char* expr) {
   char* end; float v=strtof(ex,&end);
   if (end!=ex&&*end=='\0') return v;
 
+  // random(a,b) returns a whole-number random value inside the requested range.
   if (strncmp(ex,"random(",7)==0) {
     char inner[40]; strncpy(inner,ex+7,39);
     char* comma=strchr(inner,','); if(!comma)return 0; *comma='\0';
@@ -169,6 +250,7 @@ float evalExpr(const char* expr) {
     return a + (float)(esp_random()%(int)(fabsf(b-a)+1));
   }
 
+  // Binary expressions are expected inside parentheses, such as (a+b).
   if (ex[0]=='(') {
     char inner[40]; strncpy(inner,ex+1,39);
     int l=strlen(inner); if(l>0&&inner[l-1]==')')inner[l-1]='\0';
@@ -188,6 +270,13 @@ float evalExpr(const char* expr) {
   return getVar(ex);
 }
 
+/*
+ * Extracts one colon-separated parameter from a command line.
+ *
+ * Robot commands use a compact format such as FORWARD:1:5. This helper returns
+ * the requested field by index. Parentheses and square brackets increase depth
+ * so colons inside expressions are not treated as separators.
+ */
 String getP(const char* s, int idx) {
   int f=0, st=0, depth=0;
   for (int i=0;;i++) {
@@ -202,6 +291,13 @@ String getP(const char* s, int idx) {
   return "";
 }
 
+/*
+ * Sends one telemetry packet back to the WEMOS bridge.
+ *
+ * Telemetry is skipped until the WEMOS board has sent at least one packet,
+ * because that first packet gives us its IP address. Messages are formatted as
+ * TYPE:VALUE and sent over UDP to the telemetry port expected by the bridge.
+ */
 void sendTelem(const char* type, const char* value) {
   if (!wemosKnown) return;
   char buf[128]; snprintf(buf,sizeof(buf),"%s:%s",type,value);
@@ -210,15 +306,64 @@ void sendTelem(const char* type, const char* value) {
   udp.endPacket();
 }
 
-// ── MOTORES ──────────────────────────────────────────────────
+// MOTORS
 volatile bool motAbort = false;
 
+/*
+ * Converts a Blockly speed value into an 8-bit PWM duty cycle.
+ *
+ * Blockly commands use a simple 1-10 speed scale. This maps that scale to a
+ * practical PWM range where 1 is still strong enough to move the robot and 10
+ * reaches full duty cycle.
+ */
 int  scalePWM(int v) { return map(constrain(v,1,10),1,10,55,255); }
+
+/*
+ * Stops both motors and disables the motor driver standby pin.
+ *
+ * This is the common safe stop used after completed movements, STOP commands,
+ * and aborted programs. Pulling STBY low disables the driver outputs after the
+ * PWM channels are set to zero.
+ */
 void motorOff()      { setPWM_A(0); setPWM_B(0); digitalWrite(STBY,LOW); }
+
+/*
+ * Enables the motor driver.
+ *
+ * The driver must be taken out of standby before direction pins and PWM output
+ * can move the motors. Movement functions call this before starting motion.
+ */
 void motorOn()       { digitalWrite(STBY,HIGH); }
+
+/*
+ * Sets the direction pins for motor A.
+ *
+ * The wiring for motor A uses LOW/HIGH for forward and HIGH/LOW for reverse.
+ * Keeping this in one helper prevents the movement code from duplicating the
+ * pin polarity details.
+ */
 void dirA(bool f)    { digitalWrite(AIN1,f?LOW:HIGH); digitalWrite(AIN2,f?HIGH:LOW); }
+
+/*
+ * Sets the direction pins for motor B.
+ *
+ * Motor B is wired with the opposite forward polarity from motor A, so this
+ * helper hides that difference. Passing true means "drive forward" at the robot
+ * level even though the pin pattern is different.
+ */
 void dirB(bool f)    { digitalWrite(BIN1,f?HIGH:LOW); digitalWrite(BIN2,f?LOW:HIGH); }
 
+/*
+ * Drives both wheels for a target encoder step count.
+ *
+ * The function resets both encoders, enables the motors, sets a shared forward
+ * or backward direction, and drives until both wheels have reached the target.
+ * While moving, it compares encoder distances and slightly adjusts each PWM
+ * duty cycle so the wheels stay synchronized.
+ *
+ * motAbort is checked continuously. A STOP command can set that flag from the
+ * main loop, causing this function to leave the loop and turn the motors off.
+ */
 void moveSteps(long steps, bool fwd, int vel) {
   int pwm=scalePWM(vel); encA=0; encB=0; motorOn(); dirA(fwd); dirB(fwd);
   setPWM_A(pwm); setPWM_B(pwm);
@@ -233,6 +378,14 @@ void moveSteps(long steps, bool fwd, int vel) {
   motorOff();
 }
 
+/*
+ * Rotates the robot in place for a target encoder step count.
+ *
+ * Clockwise turns drive the two motors in opposite directions. The routine
+ * waits until both encoders have reached the requested absolute step count, or
+ * until motAbort is set. It is used by TURN_RIGHT and TURN_LEFT commands after
+ * degrees have been converted into encoder steps.
+ */
 void turnSteps(long steps, bool cw, int vel) {
   int pwm=scalePWM(vel); encA=0; encB=0; motorOn(); dirA(!cw); dirB(cw);
   setPWM_A(pwm); setPWM_B(pwm);
@@ -241,6 +394,13 @@ void turnSteps(long steps, bool cw, int vel) {
   motorOff();
 }
 
+/*
+ * Drives the two motors independently for a fixed amount of time.
+ *
+ * vA and vB are signed speed values: the sign chooses direction and the
+ * absolute value chooses the 1-10 speed that is mapped to PWM. This is used for
+ * tank-style movement where each wheel can run at a different speed.
+ */
 void tankMove(float vA, float vB, float secs) {
   motorOn(); dirA(vA>=0); dirB(vB>=0);
   setPWM_A(scalePWM(constrain((int)fabsf(vA),1,10)));
@@ -251,12 +411,19 @@ void tankMove(float vA, float vB, float secs) {
   motorOff();
 }
 
+/*
+ * Waits without blocking FreeRTOS scheduling.
+ *
+ * The interpreter uses this for WAIT commands. It repeatedly yields with
+ * vTaskDelay() so other tasks, including UDP reception and the color task, can
+ * continue running while the program is paused.
+ */
 void doWait(float secs) {
   unsigned long t0=millis();
   while(!motAbort&&(millis()-t0)<(unsigned long)(secs*1000.0f)) vTaskDelay(pdMS_TO_TICKS(5));
 }
 
-// ── INTÉRPRETE DE PROGRAMA ───────────────────────────────────
+// PROGRAM INTERPRETER
 #define STACK_SIZE 32
 struct StackFrame { char type; int loopStart; int loopCount; };
 StackFrame stk[STACK_SIZE];
@@ -267,6 +434,15 @@ struct Def { char name[32]; int start; int end; };
 Def  defs[MAX_DEFS];
 int  defCount = 0;
 
+/*
+ * Finds the matching end token for a nested block.
+ *
+ * Program blocks such as IF, REPEAT, FOREVER, and DEF can contain other blocks
+ * of the same type. This function walks forward from the current line, tracks
+ * nesting depth, and returns the line index where the matching END_* token is
+ * found. If no match is found, it returns progLen so callers skip to the end
+ * safely.
+ */
 int findEnd(int from, const char* endToken, const char* startToken) {
   int depth=1;
   for(int i=from+1;i<progLen;i++){
@@ -276,6 +452,13 @@ int findEnd(int from, const char* endToken, const char* startToken) {
   return progLen;
 }
 
+/*
+ * Scans the uploaded program for function definitions.
+ *
+ * DEF blocks are not executed when first encountered by the main program flow.
+ * This prescan records each definition name and its start/end line positions so
+ * CALL commands can execute the definition body later.
+ */
 void prescanDefs() {
   defCount=0;
   for(int i=0;i<progLen;i++){
@@ -288,12 +471,28 @@ void prescanDefs() {
   }
 }
 
+/*
+ * Forward declaration for the interpreter.
+ *
+ * CALL execution recursively runs lines inside DEF blocks, and runProgram()
+ * also calls execLine(). The declaration lets those functions reference
+ * execLine() before its full implementation appears below.
+ */
 void execLine(int& pc);
 
+/*
+ * Runs the currently buffered Blockly program.
+ *
+ * The UDP loop fills prog[] one command line at a time. When the upload timeout
+ * expires, runTaskFn() calls this function on its own FreeRTOS task. It clears
+ * the interpreter stack, records function definitions, resets encoders to match
+ * Spike-like startup behavior, then executes lines until the program ends or a
+ * STOP command sets motAbort.
+ */
 void runProgram() {
   stkTop=0;
   prescanDefs();
-  // <-- AQUÍ: Se resetean los valores automáticamente al arrancar el programa (como en Spike)
+  // Reset encoder values automatically when the program starts, like Spike.
   encA = 0; encB = 0;
   sendTelem("STATUS","RUNNING");
 
@@ -306,10 +505,25 @@ void runProgram() {
   progDone=true;
 }
 
+/*
+ * Executes one line of the compact robot program.
+ *
+ * pc is passed by reference so the interpreter can advance to the next line,
+ * jump over inactive blocks, repeat loops, or execute function bodies. The
+ * function handles Blockly control structures first, then assignments and
+ * user-defined calls, and finally dispatches movement/wait/reset commands to
+ * the motor helpers.
+ *
+ * The stack stores active control blocks:
+ * R = repeat loop, F = forever loop, T = active IF branch, I = inactive IF
+ * branch, and X = skipped ELSE branch. The skip logic also recognizes D if a
+ * definition body ever needs to be represented on the stack.
+ */
 void execLine(int& pc) {
   const char* line = prog[pc];
   if(line[0]=='\0'){pc++;return;}
 
+  // If the current stack top represents a skipped branch, jump over its body.
   if(stkTop>0){
     char top=stk[stkTop-1].type;
     if(top=='I'||top=='D'){
@@ -330,12 +544,15 @@ void execLine(int& pc) {
     }
   }
 
+  // REPEAT starts a counted loop and stores the remaining iteration count.
   if(strncmp(line,"REPEAT:",7)==0){
     int times=(int)evalExpr(line+7);
     if(times<=0){ pc=findEnd(pc,"END_REPEAT","REPEAT:")+1; return; }
     if(stkTop<STACK_SIZE){stk[stkTop++]={'R',pc,times-1};}
     pc++;return;
   }
+
+  // END_REPEAT either loops back to the first body line or closes the loop.
   if(strcmp(line,"END_REPEAT")==0){
     if(stkTop>0&&stk[stkTop-1].type=='R'){
       if(stk[stkTop-1].loopCount>0){ stk[stkTop-1].loopCount--; pc=stk[stkTop-1].loopStart+1; return; } 
@@ -344,33 +561,43 @@ void execLine(int& pc) {
     pc++;return;
   }
 
+  // FOREVER loops until motAbort is set by STOP or by another abort path.
   if(strcmp(line,"FOREVER")==0){
     if(stkTop<STACK_SIZE){stk[stkTop++]={'F',pc,0};}
     pc++;return;
   }
+
+  // END_FOREVER jumps back to the line after FOREVER.
   if(strcmp(line,"END_FOREVER")==0){
     if(stkTop>0&&stk[stkTop-1].type=='F'){ pc=stk[stkTop-1].loopStart+1; return; }
     pc++;return;
   }
 
+  // IF stores whether the true branch should run or be skipped.
   if(strncmp(line,"IF:",3)==0){
     float cond=evalExpr(line+3);
     if(cond!=0){ if(stkTop<STACK_SIZE){stk[stkTop++]={'T',pc,0};} } 
     else       { if(stkTop<STACK_SIZE){stk[stkTop++]={'I',pc,0};} }
     pc++;return;
   }
+
+  // ELSE switches an already-executed IF branch into skip mode.
   if(strcmp(line,"ELSE")==0){
     if(stkTop>0&&stk[stkTop-1].type=='T'){ stk[stkTop-1].type='X'; }
     pc++;return;
   }
+
+  // END_IF closes any IF/ELSE state that is still on the stack.
   if(strcmp(line,"END_IF")==0){
     if(stkTop>0){ char t=stk[stkTop-1].type; if(t=='T'||t=='I'||t=='X') stkTop--; }
     pc++;return;
   }
 
+  // DEF bodies are stored by prescanDefs() and skipped during normal flow.
   if(strncmp(line,"DEF:",4)==0){ pc=findEnd(pc,"END_DEF","DEF:")+1; return; }
   if(strcmp(line,"END_DEF")==0){ pc++;return; }
 
+  // CALL executes the stored definition body line by line.
   if(strncmp(line,"CALL:",5)==0){
     const char* name=line+5;
     for(int i=0;i<defCount;i++){
@@ -383,6 +610,7 @@ void execLine(int& pc) {
     pc++;return;
   }
 
+  // SET stores the evaluated expression result in the variable table.
   if(strncmp(line,"SET:",4)==0){
     String l=String(line); int c1=l.indexOf(':',4);
     if(c1>0){
@@ -395,7 +623,7 @@ void execLine(int& pc) {
   sendTelem("CMD",line);
   String t=getP(line,0); t.toUpperCase();
 
-  // <-- AQUÍ: Reconocemos PING para no devolver error
+  // Recognize PING so it does not return an error.
   if      (t=="PING")       { sendTelem("STATUS", "IDLE"); }
   else if (t=="STOP")       { motorOff(); }
   else if (t=="FORWARD")    { float r=evalExpr(getP(line,1).c_str()); int sp=(int)evalExpr(getP(line,2).c_str()); moveSteps((long)(r*PASOS_X_VUELTA),true,sp); }
@@ -412,13 +640,21 @@ void execLine(int& pc) {
   pc++;
 }
 
-// ── RECEPCIÓN UDP Y TAREAS ───────────────────────────────────
+// UDP RECEPTION AND TASKS
 #define RX_TIMEOUT_MS 300
 unsigned long lastRxMs = 0;
 bool          receiving = false;
 
 TaskHandle_t runTask = NULL;
 
+/*
+ * FreeRTOS worker task that runs uploaded programs.
+ *
+ * The main loop receives UDP lines and decides when a complete program has
+ * arrived. It then notifies this task. Running the interpreter here keeps
+ * movement commands, waits, and loops from blocking the UDP/color work that
+ * continues in loop() and colorTaskFn().
+ */
 void runTaskFn(void*) {
   for(;;){
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -426,6 +662,13 @@ void runTaskFn(void*) {
   }
 }
 
+/*
+ * Appends one received program line to the program buffer.
+ *
+ * Lines are truncated to MAX_LINE_LEN - 1 and always null-terminated. If the
+ * program buffer is full, the new line is ignored so the sketch never writes
+ * past the fixed-size prog array.
+ */
 void addLine(const char* line) {
   if(progLen>=MAX_LINES) return;
   strncpy(prog[progLen],line,MAX_LINE_LEN-1);
@@ -433,7 +676,16 @@ void addLine(const char* line) {
   progLen++;
 }
 
-// ── SETUP ────────────────────────────────────────────────────
+// SETUP
+/*
+ * Initializes sensors, motors, encoders, WiFi, UDP, and background tasks.
+ *
+ * setup() prepares the hardware in a safe order: Serial starts first for debug
+ * output, the color sensor is initialized and its task is created only if the
+ * sensor responds, motor pins are configured with the driver disabled, encoder
+ * interrupts are attached, the ESP32 access point is started, UDP listening is
+ * enabled, and finally the program-runner task is created.
+ */
 void setup() {
   Serial.begin(115200); delay(200);
 
@@ -465,9 +717,21 @@ void setup() {
   xTaskCreatePinnedToCore(runTaskFn,"RunTask",8192,NULL,2,&runTask,1);
 }
 
-// ── LOOP ─────────────────────────────────────────────────────
+// LOOP
+/*
+ * Handles real-time communication and telemetry for the robot controller.
+ *
+ * The interpreter runs in runTaskFn(), so loop() focuses on short recurring
+ * jobs: send fresh color telemetry, send encoder telemetry every 200 ms,
+ * receive UDP command/program lines from the WEMOS bridge, handle STOP
+ * immediately, and start program execution after a short receive timeout.
+ *
+ * The receive timeout lets the desktop app send a multi-line program as a burst
+ * of UDP packets. When no new line arrives for RX_TIMEOUT_MS, the buffered lines
+ * are treated as one complete program.
+ */
 void loop() {
-  // 1. Envío de Telemetría de Color
+  // 1. Send color telemetry.
   if (sColorNew && wemosKnown) {
     sColorNew = false;
     char buf[64];
@@ -475,7 +739,7 @@ void loop() {
     sendTelem("COLOR", buf);
   }
 
-  // 2. Envío de Telemetría de Encoders (Continua y en Grados)
+  // 2. Send continuous encoder telemetry in degrees.
   static unsigned long lastEncMs = 0;
   if (wemosKnown && (millis() - lastEncMs > 200)) {
     lastEncMs = millis();
@@ -486,15 +750,17 @@ void loop() {
     sendTelem("ENC", buf);
   }
 
-  // 3. Recepción de Comandos (UDP)
+  // 3. Receive UDP commands.
   int pktSize = udp.parsePacket();
   if (pktSize > 0) {
+    // Learn the WEMOS IP from the first incoming packet so replies know where to go.
     if (!wemosKnown){ wemosIP=udp.remoteIP(); wemosKnown=true; }
     char buf[MAX_LINE_LEN]; int len=udp.read(buf,MAX_LINE_LEN-1);
     if(len>0){
       buf[len]='\0'; String line=String(buf); line.trim();
 
       if(line=="STOP"){
+        // STOP must interrupt immediately, even while a previous program is running.
         motAbort=true; motorOff();
         progLen=0; receiving=false; progDone=true;
         sendTelem("STATUS","IDLE");
@@ -502,15 +768,17 @@ void loop() {
       }
 
       if(!progDone) { vTaskDelay(pdMS_TO_TICKS(5)); return; }
+      // The first line after an idle state starts a new buffered program.
       if(!receiving){ progLen=0; receiving=true; }
       addLine(line.c_str()); lastRxMs=millis();
     }
   }
 
-  // 4. Iniciar ejecución
+  // 4. Start execution.
   if(receiving && progDone && (millis()-lastRxMs)>RX_TIMEOUT_MS){
     receiving=false;
     if(progLen>0){
+      // Notify the worker task instead of executing the program in loop().
       motAbort=false; progDone=false;
       xTaskNotifyGive(runTask);
     }
