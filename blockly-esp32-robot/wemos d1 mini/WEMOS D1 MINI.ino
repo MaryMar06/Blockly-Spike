@@ -10,7 +10,7 @@ const char*    AP_SSID      = "RobotAP";
 const char*    AP_PASS      = "robot1234";
 // Convertimos el string a objeto IPAddress correctamente
 IPAddress      ESP32_IP(192, 168, 4, 1); 
-
+// Constants
 const uint16_t UDP_SEND_PORT = 4210;
 const uint16_t UDP_RECV_PORT = 4211;
 const uint32_t SERIAL_BAUD   = 115200;
