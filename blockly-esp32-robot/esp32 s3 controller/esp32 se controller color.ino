@@ -6,6 +6,7 @@
 #include <WiFiUdp.h>
 #include <Wire.h>
 #include "Adafruit_AS7341.h"
+#include "VL53L1X.h"
 
 // AP CONFIGURATION
 const char*    AP_SSID         = "RobotAP";
@@ -57,6 +58,10 @@ const float PASOS_X_GRADO  = (PASOS_X_VUELTA * 1.19f) / 180.0f;
 // AS7341 COLOR SENSOR
 Adafruit_AS7341 as7341;
 bool sensorColorOk = false;
+
+VL53L1X distanceSensor;
+bool sensorDistanzOk = false;
+volatile int sDistanzMM = 0;
 
 const float cieX[8] = {0.0776, 0.3481, 0.0956, 0.0291, 0.5121, 1.0263, 0.6424, 0.0468};
 const float cieY[8] = {0.0022, 0.0298, 0.1390, 0.6082, 1.0000, 0.7570, 0.2650, 0.0170};
@@ -158,6 +163,12 @@ void colorTaskFn(void* arg) {
         String name = obtenerNombreColor(r, g, b, intTotal);
         strncpy(sColorName, name.c_str(), 31); sColorName[31] = '\0';
         sColorNew = true; 
+      }
+    }
+    if (sensorDistanzOk) {
+      distanceSensor.read();
+      if (!distanceSensor.timeoutOccurred()) {
+        sDistanzMM = distanceSensor.ranging_data.range_mm;
       }
     }
     vTaskDelay(pdMS_TO_TICKS(500)); 
@@ -267,6 +278,30 @@ float evalExpr(const char* expr) {
       }
     }
   }
+  if (strncmp(ex, "COLOR_IS_", 9) == 0) {
+    char wanted[16];
+    strncpy(wanted, ex + 9, 15); wanted[15] = '\0';
+    char* paren = strchr(wanted, '(');
+    if (paren) *paren = '\0';
+    const char* colorMap[][2] = {
+      {"RED","Rot"},{"GREEN","Grün"},{"BLUE","Blau"},
+      {"YELLOW","Gelb"},{"WHITE","Weiß"},{"BLACK","Schwarz"},
+      {"ORANGE","Orange"},{"CYAN","Cyan"},{"VIOLET","Violett"},{"PINK","Rosa"}
+    };
+    for (auto& m : colorMap) {
+      if (strcmp(wanted, m[0]) == 0)
+        return (strcmp(sColorName, m[1]) == 0) ? 1.0f : 0.0f;
+    }
+    return 0.0f;
+  }
+
+  // NEU: RGB-Kanäle einzeln abfragen (0-255)
+  if (strcmp(ex, "COLOR_RED()")   == 0) return (float)sR;
+  if (strcmp(ex, "COLOR_GREEN()") == 0) return (float)sG;
+  if (strcmp(ex, "COLOR_BLUE()")  == 0) return (float)sB;
+
+  // NEU: Abstand in mm vom VL53L1X
+  if (strcmp(ex, "DISTANCE()") == 0) return (float)sDistanzMM;
   return getVar(ex);
 }
 
@@ -689,11 +724,19 @@ void addLine(const char* line) {
 void setup() {
   Serial.begin(115200); delay(200);
 
-  Wire.begin(16, 17);
+  Wire.begin(15, 5);
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
     xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 4096, NULL, 1, NULL, 0);
+  }
+
+  distanceSensor.setTimeout(500);
+  if (distanceSensor.init()) {
+    distanceSensor.setDistanceMode(VL53L1X::Long);
+    distanceSensor.setMeasurementTimingBudget(50000);
+    distanceSensor.startContinuous(50);
+    sensorDistanzOk = true;
   }
 
   pinMode(STBY,OUTPUT); digitalWrite(STBY,LOW);
@@ -738,7 +781,14 @@ void loop() {
     snprintf(buf, sizeof(buf), "%d,%d,%d,%s", sR, sG, sB, sColorName);
     sendTelem("COLOR", buf);
   }
-
+ // NEU: Abstands-Telemetrie alle 200ms senden
+  static unsigned long lastDistMs = 0;
+  if (sensorDistanzOk && wemosKnown && (millis() - lastDistMs > 200)) {
+    lastDistMs = millis();
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", sDistanzMM);
+    sendTelem("DIST", buf);
+  }
   // 2. Send continuous encoder telemetry in degrees.
   static unsigned long lastEncMs = 0;
   if (wemosKnown && (millis() - lastEncMs > 200)) {
