@@ -745,7 +745,7 @@ void setup() {
 
   // Sensor-Task erst nach vollständiger Initialisierung beider Sensoren starten
   // Verhindert Absturz wenn ein Sensor beim Start noch nicht bereit ist
-  xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 8192, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 4096, NULL, 1, NULL, 0);
 
   pinMode(STBY,OUTPUT); digitalWrite(STBY,LOW);
   pinMode(AIN1,OUTPUT); pinMode(AIN2,OUTPUT);
@@ -765,7 +765,7 @@ void setup() {
   WiFi.softAP(AP_SSID,AP_PASS);
   udp.begin(UDP_LISTEN_PORT);
 
-  xTaskCreatePinnedToCore(runTaskFn,"RunTask",8192,NULL,2,&runTask,1);
+  xTaskCreatePinnedToCore(runTaskFn,"RunTask",4096,NULL,2,&runTask,1);
 }
 
 // LOOP
