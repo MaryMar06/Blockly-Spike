@@ -723,15 +723,29 @@ void addLine(const char* line) {
  * enabled, and finally the program-runner task is created.
  */
 void setup() {
-  Serial.begin(115200); delay(200);
+  Serial.begin(115200); delay(500);
+  Serial.println("1: Serial OK");
 
   Wire.begin(15, 5);
-  delay(100); // I2C-Bus stabilisieren bevor Sensoren initialisiert werden
+  delay(100);
+  Serial.println("2: Wire OK");
+
+  if (as7341.begin()) {
+    Serial.println("3: AS7341 OK");    // I2C-Bus stabilisieren bevor Sensoren initialisiert werden
 
   // AS7341 Farbsensor initialisieren
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
+    Serial.println("4: AS7341 konfiguriert");
+  } else {
+    Serial.println("3: AS7341 FEHLER");
+  }
+
+  distanceSensor.setTimeout(500);
+  Serial.println("5: starte VL53L1X...");
+  if (distanceSensor.init()) {
+    Serial.println("6: VL53L1X OK");
   }
 
   // VL53L1X Abstandssensor initialisieren
