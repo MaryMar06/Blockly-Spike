@@ -19,13 +19,13 @@ bool      wemosKnown = false;
 WiFiUDP   udp;
 
 // MOTOR AND ENCODER PINS
-#define AIN1 5
-#define AIN2 6
-#define PWMA 4
-#define BIN1 12
-#define BIN2 13
-#define PWMB 14
-#define STBY 7
+#define AIN1 26  // Richtung Motor A
+#define AIN2 27  // Richtung Motor A
+#define PWMA 25  // Geschwindigkeit Motor A
+#define BIN1 32  // Richtung Motor B
+#define BIN2 33  // Richtung Motor B
+#define PWMB 14  // Geschwindigkeit Motor B (unverändert)
+#define STBY 13  // Standby Motortreiber
 #define ENC_A_A 18
 #define ENC_A_B 19
 #define ENC_B_A 20
