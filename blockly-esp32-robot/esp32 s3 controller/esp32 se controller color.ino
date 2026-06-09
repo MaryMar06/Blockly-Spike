@@ -731,7 +731,6 @@ void setup() {
   Serial.println("2: Wire OK");
 
   // AS7341 Farbsensor initialisieren
-// AS7341 Farbsensor initialisieren
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
