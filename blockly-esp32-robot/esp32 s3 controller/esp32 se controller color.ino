@@ -722,7 +722,7 @@ void addLine(const char* line) {
  * interrupts are attached, the ESP32 access point is started, UDP listening is
  * enabled, and finally the program-runner task is created.
  */
-vvoid setup() {
+void setup() {
   Serial.begin(115200); delay(500);
   Serial.println("1: Serial OK");
 
