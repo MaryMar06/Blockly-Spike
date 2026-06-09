@@ -138,6 +138,7 @@ String obtenerNombreColor(int r, int g, int b, float intensidadTotal) {
  */
 void colorTaskFn(void* arg) {
   uint16_t ch[12];
+   vTaskDelay(pdMS_TO_TICKS(1000));
   for (;;) {
     if (sensorColorOk) {
       if (as7341.readAllChannels(ch)) {
