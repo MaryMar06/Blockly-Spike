@@ -722,7 +722,7 @@ void addLine(const char* line) {
  * interrupts are attached, the ESP32 access point is started, UDP listening is
  * enabled, and finally the program-runner task is created.
  */
-void setup() {
+vvoid setup() {
   Serial.begin(115200); delay(500);
   Serial.println("1: Serial OK");
 
@@ -776,7 +776,6 @@ void setup() {
   xTaskCreatePinnedToCore(runTaskFn,"RunTask",4096,NULL,2,&runTask,1);
   Serial.println("6: Bereit.");
 }
-
 // LOOP
 /*
  * Handles real-time communication and telemetry for the robot controller.
