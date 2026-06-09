@@ -730,35 +730,29 @@ void setup() {
   delay(100);
   Serial.println("2: Wire OK");
 
-  if (as7341.begin()) {
-    Serial.println("3: AS7341 OK");    // I2C-Bus stabilisieren bevor Sensoren initialisiert werden
-
   // AS7341 Farbsensor initialisieren
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
-    Serial.println("4: AS7341 konfiguriert");
+    Serial.println("3: AS7341 OK");
   } else {
     Serial.println("3: AS7341 FEHLER");
   }
 
-  distanceSensor.setTimeout(500);
-  Serial.println("5: starte VL53L1X...");
-  if (distanceSensor.init()) {
-    Serial.println("6: VL53L1X OK");
-  }
-
   // VL53L1X Abstandssensor initialisieren
   distanceSensor.setTimeout(500);
+  Serial.println("4: starte VL53L1X...");
   if (distanceSensor.init()) {
     distanceSensor.setDistanceMode(VL53L1X::Long);
     distanceSensor.setMeasurementTimingBudget(50000);
     distanceSensor.startContinuous(50);
     sensorDistanzOk = true;
+    Serial.println("5: VL53L1X OK");
+  } else {
+    Serial.println("5: VL53L1X FEHLER");
   }
 
   // Sensor-Task erst nach vollständiger Initialisierung beider Sensoren starten
-  // Verhindert Absturz wenn ein Sensor beim Start noch nicht bereit ist
   xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 4096, NULL, 1, NULL, 0);
 
   pinMode(STBY,OUTPUT); digitalWrite(STBY,LOW);
@@ -780,6 +774,7 @@ void setup() {
   udp.begin(UDP_LISTEN_PORT);
 
   xTaskCreatePinnedToCore(runTaskFn,"RunTask",4096,NULL,2,&runTask,1);
+  Serial.println("6: Bereit.");
 }
 
 // LOOP
