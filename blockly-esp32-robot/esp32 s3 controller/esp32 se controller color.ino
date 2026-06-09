@@ -728,7 +728,7 @@ void setup() {
   if (as7341.begin()) {
     as7341.setATIME(100); as7341.setASTEP(999); as7341.setGain(AS7341_GAIN_128X);
     sensorColorOk = true;
-    xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(colorTaskFn, "ColorTask", 8192, NULL, 1, NULL, 0);
   }
 
   distanceSensor.setTimeout(500);
